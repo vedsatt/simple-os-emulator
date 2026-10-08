@@ -16,7 +16,7 @@ func main() {
 
 	vfs, err := vfs.InitVFS(cfg)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	shell := shell.InitShell(vfs, cfg)
