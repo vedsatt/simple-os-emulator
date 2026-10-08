@@ -19,13 +19,31 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	log.Printf("VFS path: %s", cfg.VFSPath)
+	log.Printf("Prompt: %s", cfg.Prompt)
+
+	if cfg.Script != "" {
+		log.Printf("Script: %s", cfg.Script)
+	} else {
+		log.Printf("Script: not set")
+	}
+
 	shell := shell.InitShell(vfs, cfg)
+
+	if cfg.Script != "" {
+		shell.ExecuteScript()
+	}
 
 	a := app.New()
 
 	window, input := gui.CreateWindow(a, shell)
 
 	window.Show()
+
+	if shell.ScriptShouldExit() {
+		window.Close()
+		return
+	}
 
 	window.Canvas().Focus(input)
 

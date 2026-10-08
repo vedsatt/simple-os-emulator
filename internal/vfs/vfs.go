@@ -11,10 +11,11 @@ import (
 
 type VFS struct {
 	root *Node
+	Name string
 }
 
 func InitVFS(cfg *config.Config) (*VFS, error) {
-	path := filepath.Join("data/vfs", cfg.VFSPath)
+	path := filepath.Join("data/vfs", cfg.VFSPath) + ".json"
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -27,5 +28,5 @@ func InitVFS(cfg *config.Config) (*VFS, error) {
 		return nil, fmt.Errorf("err with decoding vfs file: %w", err)
 	}
 
-	return &VFS{root: root}, nil
+	return &VFS{root: root, Name: cfg.VFSPath}, nil
 }

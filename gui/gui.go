@@ -67,10 +67,10 @@ func (t *terminalTheme) Size(name fyne.ThemeSizeName) float32 {
 	return theme.DefaultTheme().Size(name)
 }
 
-func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *widget.Entry) {
+func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *TerminalEntry) {
 	a.Settings().SetTheme(&terminalTheme{})
 
-	window := a.NewWindow("Simple OS Emulator — VFS: default")
+	window := a.NewWindow(shell.Prompt + " — VFS: " + shell.VFS.Name)
 	window.Resize(fyne.NewSize(800, 500))
 
 	terminal := container.NewVBox()
@@ -79,14 +79,43 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *widget.Entry) {
 
 	window.SetContent(scroll)
 
-	var firstInput *widget.Entry
+	scriptResults := shell.GetScriptResult()
 
-	var createPrompt func() *widget.Entry
+	if len(scriptResults) > 0 && scriptResults[0].Error() != nil {
+		terminal.Add(
+			newTerminalLabel(scriptResults[0].Error().Error()),
+		)
+	} else {
+		for _, result := range scriptResults {
+			completedPrompt := newTerminalLabel(shell.Prompt)
+			completedCommand := newTerminalLabel(result.Command())
 
-	createPrompt = func() *widget.Entry {
-		prompt := newTerminalLabel("user@localhost:~$ ")
+			completedRow := container.NewBorder(
+				nil,
+				nil,
+				completedPrompt,
+				nil,
+				completedCommand,
+			)
 
-		input := widget.NewEntry()
+			terminal.Add(completedRow)
+
+			if result.String() != "" {
+				terminal.Add(
+					newTerminalLabel(result.String()),
+				)
+			}
+		}
+	}
+
+	var firstInput *TerminalEntry
+
+	var createPrompt func() *TerminalEntry
+
+	createPrompt = func() *TerminalEntry {
+		prompt := newTerminalLabel(shell.Prompt + " ")
+
+		input := NewTerminalEntry()
 		input.TextStyle = fyne.TextStyle{
 			Monospace: true,
 		}
@@ -104,7 +133,7 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *widget.Entry) {
 		input.OnSubmitted = func(command string) {
 			terminal.Remove(inputRow)
 
-			completedPrompt := newTerminalLabel("user@localhost:~$ ")
+			completedPrompt := newTerminalLabel(shell.Prompt + " ")
 			completedCommand := newTerminalLabel(command)
 
 			completedRow := container.NewBorder(
@@ -138,6 +167,10 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *widget.Entry) {
 		}
 
 		return input
+	}
+
+	if shell.ScriptShouldExit() {
+		return window, nil
 	}
 
 	firstInput = createPrompt()

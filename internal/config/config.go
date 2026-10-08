@@ -3,8 +3,8 @@ package config
 import "flag"
 
 const (
-	defaultVFSPath = "simple.json"
-	defaultPrompt  = "user@localhost:~$ "
+	defaultVFSPath = "simple"
+	defaultPrompt  = "user@localhost:~$"
 	defaultScript  = ""
 )
 
