@@ -8,9 +8,9 @@ const (
 )
 
 type Node struct {
-	Name    string
-	Type    NodeType
-	Content string
-	Parent  *Node
-	Childs  map[string]*Node
+	Name    string           `json:"name"`
+	Type    NodeType         `json:"type"`
+	Content string           `json:"content,omitempty"`
+	Parent  *Node            `json:"-"`
+	Childs  map[string]*Node `json:"children,omitempty"`
 }

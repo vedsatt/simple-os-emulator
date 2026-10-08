@@ -1,1 +1,61 @@
-{}
+{
+  "name": "/",
+  "type": "dir",
+  "children": {
+    "home": {
+      "name": "home",
+      "type": "dir",
+      "children": {
+        "user": {
+          "name": "user",
+          "type": "dir",
+          "children": {
+            "docs": {
+              "name": "docs",
+              "type": "dir",
+              "children": {
+                "project.txt": {
+                  "name": "project.txt",
+                  "type": "file",
+                  "content": "OS Emulator Project\n\nCurrent status:\n- REPL implemented\n- configuration implemented\n- VFS loading in progress\n\nNext step: implement real ls and cd commands."
+                },
+                "ideas.txt": {
+                  "name": "ideas.txt",
+                  "type": "file",
+                  "content": "Ideas:\n1. Dynamic window title\n2. UNIX-like prompt\n3. In-memory file operations"
+                }
+              }
+            },
+            "downloads": {
+              "name": "downloads",
+              "type": "dir",
+              "children": {}
+            }
+          }
+        }
+      }
+    },
+    "var": {
+      "name": "var",
+      "type": "dir",
+      "children": {
+        "log": {
+          "name": "log",
+          "type": "dir",
+          "children": {
+            "system.log": {
+              "name": "system.log",
+              "type": "file",
+              "content": "[INFO] emulator started\n[INFO] VFS loaded successfully\n[INFO] waiting for user commands"
+            }
+          }
+        }
+      }
+    },
+    "tmp": {
+      "name": "tmp",
+      "type": "dir",
+      "children": {}
+    }
+  }
+}

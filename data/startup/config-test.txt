@@ -1,0 +1,10 @@
+// basic command stubs
+ls
+ls home test
+
+cd
+cd home
+
+// error handling
+unknown
+bad_command arg1 arg2

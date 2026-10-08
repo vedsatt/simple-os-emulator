@@ -28,5 +28,19 @@ func InitVFS(cfg *config.Config) (*VFS, error) {
 		return nil, fmt.Errorf("err with decoding vfs file: %w", err)
 	}
 
+	setParent(root, nil)
+
 	return &VFS{root: root, Name: cfg.VFSPath}, nil
+}
+
+func setParent(node *Node, parent *Node) {
+	if node == nil {
+		return
+	}
+
+	node.Parent = parent
+
+	for _, child := range node.Childs {
+		setParent(child, node)
+	}
 }
