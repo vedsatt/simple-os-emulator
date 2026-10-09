@@ -2,6 +2,105 @@
   "name": "/",
   "type": "dir",
   "children": {
+    "opt": {
+    "name": "opt",
+    "type": "dir",
+    "children": {}
+    },
+    "srv": {
+    "name": "srv",
+    "type": "dir",
+    "children": {}
+    },
+    "mnt": {
+    "name": "mnt",
+    "type": "dir",
+    "children": {}
+    },
+    "media": {
+    "name": "media",
+    "type": "dir",
+    "children": {}
+    },
+    "usr": {
+    "name": "usr",
+    "type": "dir",
+    "children": {
+        "info.txt": {
+        "name": "info.txt",
+        "type": "file",
+        "content": "User applications"
+        }
+    }
+    },
+    "dev": {
+    "name": "dev",
+    "type": "dir",
+    "children": {}
+    },
+    "proc": {
+    "name": "proc",
+    "type": "dir",
+    "children": {}
+    },
+    "run": {
+    "name": "run",
+    "type": "dir",
+    "children": {}
+    },
+    "boot": {
+    "name": "boot",
+    "type": "dir",
+    "children": {
+        "kernel.img": {
+        "name": "kernel.img",
+        "type": "file",
+        "content": "kernel placeholder"
+        }
+    }
+    },
+    "lib": {
+    "name": "lib",
+    "type": "dir",
+    "children": {}
+    },
+    "share": {
+    "name": "share",
+    "type": "dir",
+    "children": {}
+    },
+    "backup": {
+    "name": "backup",
+    "type": "dir",
+    "children": {
+        "backup.txt": {
+        "name": "backup.txt",
+        "type": "file",
+        "content": "Backup data"
+        }
+    }
+    },
+    "archive": {
+    "name": "archive",
+    "type": "dir",
+    "children": {}
+    },
+    "workspace": {
+    "name": "workspace",
+    "type": "dir",
+    "children": {
+        "main.go": {
+        "name": "main.go",
+        "type": "file",
+        "content": "package main"
+        }
+    }
+    },
+    "public": {
+    "name": "public",
+    "type": "dir",
+    "children": {}
+    },
     "home": {
       "name": "home",
       "type": "dir",
@@ -17,19 +116,45 @@
                 "project.txt": {
                   "name": "project.txt",
                   "type": "file",
-                  "content": "OS Emulator Project\n\nCurrent status:\n- REPL implemented\n- configuration implemented\n- VFS loading in progress\n\nNext step: implement real ls and cd commands."
+                  "content": "Simple OS emulator project\nStage 4 implementation"
                 },
                 "ideas.txt": {
                   "name": "ideas.txt",
                   "type": "file",
-                  "content": "Ideas:\n1. Dynamic window title\n2. UNIX-like prompt\n3. In-memory file operations"
+                  "content": "Add ls\nAdd cd\nAdd rev\nAdd whoami"
+                },
+                "report.md": {
+                  "name": "report.md",
+                  "type": "file",
+                  "content": "# Emulator report"
                 }
               }
             },
             "downloads": {
               "name": "downloads",
               "type": "dir",
-              "children": {}
+              "children": {
+                "archive.zip": {
+                  "name": "archive.zip",
+                  "type": "file",
+                  "content": "UEsDBAoAAAAA"
+                },
+                "image.png": {
+                  "name": "image.png",
+                  "type": "file",
+                  "content": "iVBORw0KGgo="
+                }
+              }
+            },
+            "notes.txt": {
+              "name": "notes.txt",
+              "type": "file",
+              "content": "Some personal notes"
+            },
+            "todo.txt": {
+              "name": "todo.txt",
+              "type": "file",
+              "content": "Finish practical work"
             }
           }
         }
@@ -46,16 +171,85 @@
             "system.log": {
               "name": "system.log",
               "type": "file",
-              "content": "[INFO] emulator started\n[INFO] VFS loaded successfully\n[INFO] waiting for user commands"
+              "content": "System started successfully"
+            },
+            "app.log": {
+              "name": "app.log",
+              "type": "file",
+              "content": "Application log"
+            },
+            "error.log": {
+              "name": "error.log",
+              "type": "file",
+              "content": "No critical errors"
             }
           }
+        },
+        "cache": {
+          "name": "cache",
+          "type": "dir",
+          "children": {
+            "cache.db": {
+              "name": "cache.db",
+              "type": "file",
+              "content": "cached data"
+            }
+          }
+        }
+      }
+    },
+    "etc": {
+      "name": "etc",
+      "type": "dir",
+      "children": {
+        "hostname": {
+          "name": "hostname",
+          "type": "file",
+          "content": "deep-vfs"
+        },
+        "hosts": {
+          "name": "hosts",
+          "type": "file",
+          "content": "127.0.0.1 localhost"
+        },
+        "config.json": {
+          "name": "config.json",
+          "type": "file",
+          "content": "{\"debug\":true}"
         }
       }
     },
     "tmp": {
       "name": "tmp",
       "type": "dir",
-      "children": {}
+      "children": {
+        "session.tmp": {
+          "name": "session.tmp",
+          "type": "file",
+          "content": "temporary data"
+        }
+      }
+    },
+    "bin": {
+      "name": "bin",
+      "type": "dir",
+      "children": {
+        "tool": {
+          "name": "tool",
+          "type": "file",
+          "content": "binary-placeholder"
+        }
+      }
+    },
+    "readme.txt": {
+      "name": "readme.txt",
+      "type": "file",
+      "content": "Deep virtual filesystem"
+    },
+    "license.txt": {
+      "name": "license.txt",
+      "type": "file",
+      "content": "MIT"
     }
   }
 }

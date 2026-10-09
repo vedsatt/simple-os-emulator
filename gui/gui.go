@@ -2,7 +2,6 @@ package gui
 
 import (
 	"image/color"
-	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -20,17 +19,17 @@ func (t *terminalTheme) Color(
 	switch name {
 	case theme.ColorNameBackground:
 		return color.NRGBA{
-			R: 18,
-			G: 18,
-			B: 18,
+			R: 0,
+			G: 0,
+			B: 0,
 			A: 255,
 		}
 
 	case theme.ColorNameForeground:
 		return color.NRGBA{
-			R: 235,
-			G: 235,
-			B: 235,
+			R: 255,
+			G: 255,
+			B: 255,
 			A: 255,
 		}
 
@@ -45,6 +44,14 @@ func (t *terminalTheme) Color(
 }
 
 func (t *terminalTheme) Font(style fyne.TextStyle) fyne.Resource {
+	if style.Monospace {
+		if style.Bold {
+			return sfMonoSemibold
+		}
+
+		return sfMonoRegular
+	}
+
 	return theme.DefaultTheme().Font(style)
 }
 
@@ -54,6 +61,9 @@ func (t *terminalTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
 
 func (t *terminalTheme) Size(name fyne.ThemeSizeName) float32 {
 	switch name {
+	case theme.SizeNameText:
+		return 12
+
 	case theme.SizeNameInputBorder:
 		return 0
 
@@ -71,7 +81,7 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *TerminalEntry) 
 	a.Settings().SetTheme(&terminalTheme{})
 
 	window := a.NewWindow(shell.Prompt + " — VFS: " + shell.VFS.Name)
-	window.Resize(fyne.NewSize(800, 500))
+	window.Resize(fyne.NewSize(550, 400))
 
 	terminal := container.NewVBox()
 
@@ -87,7 +97,7 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *TerminalEntry) 
 		)
 	} else {
 		for _, result := range scriptResults {
-			completedPrompt := newTerminalLabel(shell.Prompt)
+			completedPrompt := newTerminalLabel(shell.PromptString())
 			completedCommand := newTerminalLabel(result.Command())
 
 			completedRow := container.NewBorder(
@@ -113,11 +123,19 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *TerminalEntry) 
 	var createPrompt func() *TerminalEntry
 
 	createPrompt = func() *TerminalEntry {
-		prompt := newTerminalLabel(shell.Prompt + " ")
+		promptText := ""
+
+		if !shell.RevMode {
+			promptText = shell.PromptString() + " "
+		}
+
+		prompt := newTerminalLabel(promptText)
 
 		input := NewTerminalEntry()
+
 		input.TextStyle = fyne.TextStyle{
 			Monospace: true,
+			Bold:      true,
 		}
 
 		inputRow := container.NewBorder(
@@ -128,12 +146,34 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *TerminalEntry) 
 			input,
 		)
 
+		input.OnCtrlD = func() {
+			if !shell.RevMode {
+				return
+			}
+
+			shell.RevMode = false
+
+			terminal.Remove(inputRow)
+
+			newInput := createPrompt()
+
+			window.Canvas().Focus(newInput)
+			scroll.ScrollToBottom()
+		}
+
 		terminal.Add(inputRow)
 
 		input.OnSubmitted = func(command string) {
 			terminal.Remove(inputRow)
 
-			completedPrompt := newTerminalLabel(shell.Prompt + " ")
+			wasRevMode := shell.RevMode
+
+			completedPromptText := ""
+			if !wasRevMode {
+				completedPromptText = shell.PromptString() + " "
+			}
+
+			completedPrompt := newTerminalLabel(completedPromptText)
 			completedCommand := newTerminalLabel(command)
 
 			completedRow := container.NewBorder(
@@ -162,7 +202,6 @@ func CreateWindow(a fyne.App, shell *shell.Shell) (fyne.Window, *TerminalEntry) 
 			newInput := createPrompt()
 
 			window.Canvas().Focus(newInput)
-
 			scroll.ScrollToBottom()
 		}
 
@@ -183,13 +222,12 @@ func newTerminalLabel(text string) *widget.Label {
 
 	label.TextStyle = fyne.TextStyle{
 		Monospace: true,
+		Bold:      true,
 	}
 
 	return label
 }
 
 func executeStub(command string, shell *shell.Shell) (string, bool) {
-	command = strings.TrimSpace(command)
-
 	return shell.Execute(command)
 }

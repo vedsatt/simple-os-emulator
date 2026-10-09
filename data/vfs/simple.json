@@ -6,10 +6,21 @@
       "name": "home",
       "type": "dir",
       "children": {
-        "notes.txt": {
-          "name": "notes.txt",
-          "type": "file",
-          "content": "Meeting notes:\n- finish shell emulator\n- test startup scripts\n- push changes to repository"
+        "user": {
+          "name": "user",
+          "type": "dir",
+          "children": {
+            "notes.txt": {
+              "name": "notes.txt",
+              "type": "file",
+              "content": "Simple notes"
+            },
+            "docs": {
+              "name": "docs",
+              "type": "dir",
+              "children": {}
+            }
+          }
         }
       }
     },
@@ -20,14 +31,19 @@
         "hostname": {
           "name": "hostname",
           "type": "file",
-          "content": "localhost"
+          "content": "simple-vfs"
         }
       }
+    },
+    "tmp": {
+      "name": "tmp",
+      "type": "dir",
+      "children": {}
     },
     "readme.txt": {
       "name": "readme.txt",
       "type": "file",
-      "content": "Simple VFS\n\nThis virtual file system is used for testing basic shell commands.\nIt contains a few directories and text files."
+      "content": "Simple virtual filesystem"
     }
   }
 }

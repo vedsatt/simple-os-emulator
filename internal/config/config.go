@@ -4,7 +4,7 @@ import "flag"
 
 const (
 	defaultVFSPath = "simple"
-	defaultPrompt  = "user@localhost:~$"
+	defaultPrompt  = "user@localhost"
 	defaultScript  = ""
 )
 

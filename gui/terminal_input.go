@@ -5,6 +5,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -13,6 +14,8 @@ type TerminalEntry struct {
 	widget.Entry
 
 	focused bool
+
+	OnCtrlD func()
 }
 
 func NewTerminalEntry() *TerminalEntry {
@@ -120,4 +123,20 @@ func (r *terminalEntryRenderer) updateCursor() {
 			textSize+4,
 		),
 	)
+}
+
+func (e *TerminalEntry) TypedShortcut(shortcut fyne.Shortcut) {
+	if custom, ok := shortcut.(*desktop.CustomShortcut); ok {
+		if custom.KeyName == fyne.KeyD &&
+			custom.Modifier == fyne.KeyModifierControl {
+
+			if e.OnCtrlD != nil {
+				e.OnCtrlD()
+			}
+
+			return
+		}
+	}
+
+	e.Entry.TypedShortcut(shortcut)
 }

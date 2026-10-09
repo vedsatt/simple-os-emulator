@@ -1,0 +1,50 @@
+// Stage 4 commands test
+
+// ls
+ls
+ls home
+ls /home/user
+ls ~/docs
+ls var/log
+ls readme.txt
+ls missing
+ls var/log readme.txt missing
+
+// cd
+cd /home/user
+pwd
+cd docs
+pwd
+cd ..
+pwd
+cd ~/downloads
+pwd
+cd /
+pwd
+cd var/log
+pwd
+cd -
+pwd
+
+// cd errors
+cd missing
+cd /home/user/notes.txt
+cd /home /var
+
+// whoami
+whoami
+whoami test
+
+// rev files
+rev readme.txt
+rev /var/log/system.log
+rev /home/user/docs/project.txt
+rev readme.txt /var/log/system.log
+rev missing
+rev /home/user/docs
+
+// pwd
+pwd
+
+// unknown command
+abracadabra

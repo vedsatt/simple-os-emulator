@@ -1,6 +1,6 @@
 #!/bin/bash
 
 go run ./cmd \
-  --vfs simple \
-  --prompt "user@localhost:~$ " \
-  --script startup.txt
+  --vfs deep \
+  --prompt "user@localhost" \
+  --script data/startup/commands-test.txt

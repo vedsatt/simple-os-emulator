@@ -44,3 +44,7 @@ func setParent(node *Node, parent *Node) {
 		setParent(child, node)
 	}
 }
+
+func (v *VFS) Root() *Node {
+	return v.root
+}

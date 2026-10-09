@@ -1,5 +1,17 @@
 {
   "name": "/",
   "type": "dir",
-  "children": {}
+  "children": {
+    "home": {
+      "name": "home",
+      "type": "dir",
+      "children": {
+        "user": {
+          "name": "user",
+          "type": "dir",
+          "children": {}
+        }
+      }
+    }
+  }
 }
