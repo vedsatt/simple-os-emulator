@@ -1,0 +1,99 @@
+// ls cmd
+
+// current directory
+ls
+
+// directory
+ls /home/user
+ls /home/user/docs
+
+// file
+ls /home/user/notes.txt
+
+// multiple paths
+ls /home/user /tmp
+ls /home/user/notes.txt /etc
+
+// errors
+ls /does-not-exist
+ls /home/user /does-not-exist
+
+
+// cd cmd
+
+// absolute path
+cd /home/user/docs
+pwd
+
+// parent directory
+cd ..
+pwd
+
+// relative path
+cd docs
+pwd
+
+// home directory
+cd ~
+pwd
+
+// root
+cd /
+pwd
+
+// previous directory
+cd /tmp
+cd /etc
+cd -
+pwd
+
+// no arguments
+cd
+pwd
+
+// errors
+cd /does-not-exist
+cd /home/user/notes.txt
+cd /home /tmp
+
+
+// whoami cmd
+
+whoami
+
+// error
+whoami test
+
+
+// rev cmd
+
+// single file
+rev /home/user/notes.txt
+
+// multiline file
+rev /home/user/docs/project.txt
+
+// multiple files
+rev /home/user/notes.txt /home/user/todo.txt
+
+// errors
+rev /home/user/docs
+rev /does-not-exist
+
+// interactive rev mode is tested manually:
+// rev
+// type text
+// Ctrl+D
+
+
+// pwd cmd
+
+pwd
+
+// error
+pwd test
+
+
+// unknown
+
+sitdown

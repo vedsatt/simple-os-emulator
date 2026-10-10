@@ -3,7 +3,7 @@ package config
 import "flag"
 
 const (
-	defaultVFSPath = "simple"
+	defaultVFSPath = "deep"
 	defaultPrompt  = "user@localhost"
 	defaultScript  = ""
 )

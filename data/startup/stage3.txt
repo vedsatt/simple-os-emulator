@@ -1,0 +1,57 @@
+// virtual file system
+
+// root
+ls /
+
+// home
+ls /home
+ls /home/user
+
+// nested directories
+ls /home/user/docs
+ls /var
+ls /var/log
+
+// files
+ls /home/user/notes.txt
+ls /home/user/docs/project.txt
+ls /var/log/system.log
+
+// absolute path navigation
+cd /home/user
+pwd
+
+cd /home/user/docs
+pwd
+ls
+
+cd /var/log
+pwd
+ls
+
+// relative path navigation
+cd /
+cd home
+cd user
+cd docs
+pwd
+
+// parent directory
+cd ..
+pwd
+
+// home directory shortcut
+cd ~
+pwd
+
+// current directory
+cd .
+pwd
+
+// fvs errors
+ls /does-not-exist
+cd /does-not-exist
+cd /home/user/notes.txt
+
+// unknown command
+qwerty

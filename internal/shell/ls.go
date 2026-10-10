@@ -33,11 +33,9 @@ func (s *Shell) lsCmd(args []string) string {
 	files := make([]lsFiles, 0)
 	dirs := make([]dirRes, 0)
 
-	// добавляем текущую ноду
 	if len(args) == 0 {
 		lsDirs = append(lsDirs, lsRes{path: "", node: s.CurrDir})
 	} else {
-		// для каждого пути ищем ноду и добавляем либо ошибку нахождения либо саму ноду
 		for i := range len(args) {
 			node, err := s.resolvePath(args[i])
 
@@ -55,7 +53,6 @@ func (s *Shell) lsCmd(args []string) string {
 		}
 	}
 
-	// обрабатываем найденные пути
 	for i := range lsDirs {
 		out, isFile := getLsItems(lsDirs[i].node)
 		if isFile {
@@ -65,11 +62,9 @@ func (s *Shell) lsCmd(args []string) string {
 		}
 	}
 
-	// сюда в форматирование закинем ошибки, файли и директории
 	return formatLs(errs, files, dirs)
 }
 
-// если дир - ее содержимое, иначе файл
 func getLsItems(node *vfs.Node) ([]string, bool) {
 	if node.Type == vfs.File {
 		return []string{node.Name}, true
