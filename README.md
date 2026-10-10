@@ -158,7 +158,7 @@ exit
 
 ### `-vfs`
 
-По умолчанию используется VFS `simple`.
+По умолчанию используется VFS `deep`.
 
 Пример:
 
@@ -209,7 +209,7 @@ admin@emulator:~$
 Пример:
 
 ```bash
-go run ./cmd -vfs deep -script data/startup/final-test.txt
+go run ./cmd -vfs deep -script data/startup/stage5.txt
 ```
 
 Стартовые скрипты поддерживают комментарии:
@@ -255,7 +255,7 @@ go run ./cmd -prompt admin@localhost
 Запуск со стартовым скриптом:
 
 ```bash
-go run ./cmd -vfs deep -script data/startup/final-test.txt
+go run ./cmd -vfs deep -script data/startup/stage5.txt
 ```
 
 Параметры можно комбинировать:
@@ -264,7 +264,7 @@ go run ./cmd -vfs deep -script data/startup/final-test.txt
 go run ./cmd \
     -vfs deep \
     -prompt admin@localhost \
-    -script data/startup/final-test.txt
+    -script data/startup/stage5.txt
 ```
 
 ## Виртуальная файловая система
@@ -303,23 +303,31 @@ data/vfs/
 
 ## Стартовые скрипты
 
-Скрипты для проверки команд находятся в:
+Стартовые скрипты для проверки этапов находятся в:
 
 ```text
 data/startup/
 ```
 
-В том числе:
+Используются следующие файлы:
 
 ```text
-commands-test.txt
-config-test.txt
-final-test.txt
-vfs-test.txt
+stage2.txt
+stage3.txt
+stage4.txt
+stage5.txt
 ```
 
-`final-test.txt` содержит итоговую проверку реализованных команд,
-различных режимов работы и обработки ошибок.
+- `stage2.txt` проверяет выполнение стартового скрипта, базовые команды,
+  обработку аргументов и ошибок.
+- `stage3.txt` проверяет работу с VFS, навигацию по каталогам, файлы,
+  вложенные пути и ошибки.
+- `stage4.txt` проверяет основные команды `ls`, `cd`, `pwd`, `whoami`, `rev`
+  и их режимы работы.
+- `stage5.txt` выполняет итоговую проверку всех реализованных команд,
+  включая `mv`, `help`, работу с VFS и обработку ошибок.
+
+Интерактивный режим `rev` с выходом через `Ctrl+D` проверяется вручную.
 
 ## Скрипты запуска
 
@@ -329,19 +337,27 @@ vfs-test.txt
 data/scripts/
 ```
 
-Они используются для проверки различных вариантов запуска приложения,
-параметров командной строки и VFS.
-
-Примеры:
+Для этапа 2 используются:
 
 ```text
-run-default.sh
-run-custom-prompt.sh
-run-with-script.sh
-run-minimal.sh
-run-simple.sh
-run-deep.sh
+stage2-default.sh
+stage2-custom-prompt.sh
+stage2-with-script.sh
 ```
+
+Они проверяют запуск приложения с параметрами командной строки, пользовательским
+prompt и стартовым скриптом.
+
+Для этапа 3 используются:
+
+```text
+stage3-minimal.sh
+stage3-simple.sh
+stage3-deep.sh
+```
+
+Они запускают эмулятор с различными вариантами VFS: минимальной, простой
+и глубокой.
 
 ## Пример работы
 
@@ -377,8 +393,21 @@ ideas.txt   notes.txt   project.txt   report.md
 │   └── main.go
 ├── data/
 │   ├── scripts/
+│   │   ├── stage2-custom-prompt.sh
+│   │   ├── stage2-default.sh
+│   │   ├── stage2-with-script.sh
+│   │   ├── stage3-deep.sh
+│   │   ├── stage3-minimal.sh
+│   │   └── stage3-simple.sh
 │   ├── startup/
+│   │   ├── stage2.txt
+│   │   ├── stage3.txt
+│   │   ├── stage4.txt
+│   │   └── stage5.txt
 │   └── vfs/
+│       ├── deep.json
+│       ├── minimal.json
+│       └── simple.json
 ├── gui/
 │   ├── fonts/
 │   ├── fonts.go
@@ -418,9 +447,8 @@ ideas.txt   notes.txt   project.txt   report.md
 Для итоговой ручной проверки можно запустить:
 
 ```bash
-go run ./cmd -vfs deep -script data/startup/final-test.txt
+go run ./cmd -vfs deep -script data/startup/stage5.txt
 ```
 
-Скрипт проверяет основные режимы работы команд и обработку ошибок.
-
-Интерактивный режим `rev` с выходом через `Ctrl+D` проверяется вручную.
+Для проверки отдельных этапов используются соответствующие файлы из
+`data/startup/` и скрипты из `data/scripts/`.
