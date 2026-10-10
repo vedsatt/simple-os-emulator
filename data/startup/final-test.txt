@@ -1,0 +1,112 @@
+// ===== BASIC SHELL =====
+
+pwd
+whoami
+help
+help ls
+help cd
+help rev
+help mv
+help unknown
+
+// ===== LS =====
+
+ls /
+ls /home/user
+ls /home/user/docs
+ls /home/user/notes.txt
+ls /home/user /tmp
+ls /does-not-exist
+
+// ===== CD / PWD =====
+
+cd /home/user
+pwd
+
+cd docs
+pwd
+
+cd ..
+pwd
+
+cd ~
+pwd
+
+cd /tmp
+pwd
+
+cd -
+pwd
+
+cd /etc/hosts
+cd /does-not-exist
+cd /home /tmp
+
+// ===== WHOAMI =====
+
+whoami
+whoami test
+
+// ===== REV =====
+
+rev /home/user/notes.txt
+rev /home/user/docs/project.txt
+rev /home/user/notes.txt /home/user/todo.txt
+rev /home/user/docs
+rev /does-not-exist
+
+// Interactive "rev" mode is tested manually with Ctrl+D.
+
+// ===== MV: RENAME =====
+
+mv /home/user/notes.txt /home/user/renamed.txt
+ls /home/user
+rev /home/user/renamed.txt
+
+// ===== MV: MOVE INTO DIRECTORY =====
+
+mv /home/user/renamed.txt /home/user/docs
+ls /home/user
+ls /home/user/docs
+
+// ===== MV: MOVE AND RENAME =====
+
+mv /home/user/todo.txt /tmp/todo-moved.txt
+ls /home/user
+ls /tmp
+rev /tmp/todo-moved.txt
+
+// ===== MV: REPLACE EXISTING FILE =====
+
+mv /tmp/todo-moved.txt /tmp/session.tmp
+ls /tmp
+rev /tmp/session.tmp
+
+// ===== MV: MOVE DIRECTORY =====
+
+mv /home/user/downloads /tmp
+ls /home/user
+ls /tmp
+ls /tmp/downloads
+
+// ===== MV ERRORS =====
+
+mv
+mv one
+mv one two three
+
+mv /does-not-exist /tmp
+
+mv / /tmp
+
+mv /home/user /home/user/docs
+
+mv /home/user/docs /home/user/docs/project.txt
+
+mv /home/user /home/user/docs/new-user
+
+mv /etc/hostname /etc/hosts/new-name
+
+// ===== UNKNOWN COMMAND =====
+
+unknown-command

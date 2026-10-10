@@ -82,8 +82,12 @@ func (s *Shell) Execute(command string) (string, bool) {
 		return s.whoamiCmd(args[1:]), false
 	case "rev":
 		return s.revCmd(args[1:], ""), false
+	case "mv":
+		return s.mvCmd(args[1:]), false
+	case "help":
+		return s.helpCmd(args[1:]), false
 	case "exit":
-		return "", true
+		return s.exitCmd(args[1:])
 	}
 
 	return fmt.Sprintf("bash: %s: command not found", cmd), false
