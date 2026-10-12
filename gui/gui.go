@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 
 	"github.com/vedsatt/simple-os-emulator/internal/shell"
 )
@@ -15,17 +13,12 @@ import (
 type terminalTheme struct{}
 
 type terminalState struct {
-	window     fyne.Window
-	content    *fyne.Container
-	scroll     *container.Scroll
-	shell      *shell.Shell
-	output     *widget.Label
-	transcript string
+	window   fyne.Window
+	shell    *shell.Shell
+	terminal *TerminalEntry
 
 	history      []string
 	historyIndex int
-
-	createPrompt func() *TerminalEntry
 }
 
 func (t *terminalTheme) Color(
@@ -89,19 +82,10 @@ func CreateWindow(
 
 	state := createTerminalState(a, sh)
 
-	renderScriptResults(state)
+	setupTerminalCallbacks(state)
+	renderInitialTerminal(state)
 
-	if sh.ScriptShouldExit() {
-		return state.window, nil
-	}
-
-	state.createPrompt = func() *TerminalEntry {
-		return createPrompt(state)
-	}
-
-	firstInput := state.createPrompt()
-
-	return state.window, firstInput
+	return state.window, state.terminal
 }
 
 func createTerminalState(
@@ -116,139 +100,147 @@ func createTerminalState(
 		fyne.NewSize(550, 400),
 	)
 
-	output := newTerminalOutput()
+	terminal := NewTerminalEntry()
+	terminal.TextStyle = terminalTextStyle()
 
-	content := container.NewVBox(output)
-	scroll := container.NewVScroll(content)
-
-	window.SetContent(scroll)
+	window.SetContent(terminal)
 
 	return &terminalState{
 		window:       window,
-		content:      content,
-		scroll:       scroll,
 		shell:        sh,
-		output:       output,
+		terminal:     terminal,
 		history:      make([]string, 0),
 		historyIndex: 0,
 	}
 }
 
-func newTerminalOutput() *widget.Label {
-	output := widget.NewLabel("")
+func setupTerminalCallbacks(state *terminalState) {
+	state.terminal.OnSubmit = func(command string) {
+		submitCommand(state, command)
+	}
 
-	output.TextStyle = terminalTextStyle()
-	output.Selectable = true
-	output.Wrapping = fyne.TextWrapOff
+	state.terminal.OnUp = func() {
+		historyUp(state)
+	}
 
-	return output
+	state.terminal.OnDown = func() {
+		historyDown(state)
+	}
+
+	state.terminal.OnCtrlD = func() {
+		handleCtrlD(state)
+	}
+
+	state.terminal.OnPaste = func(text string) {
+		runPastedCommands(state, text)
+	}
 }
 
-func renderScriptResults(state *terminalState) {
+func renderInitialTerminal(state *terminalState) {
+	transcript := buildScriptTranscript(state)
+
+	prompt := ""
+
+	if !state.shell.ScriptShouldExit() {
+		prompt = currentPrompt(state.shell)
+	}
+
+	state.terminal.LoadTranscript(
+		transcript,
+		prompt,
+	)
+}
+
+func buildScriptTranscript(
+	state *terminalState,
+) string {
 	results := state.shell.GetScriptResult()
 
 	if len(results) == 0 {
-		return
+		return ""
 	}
 
 	if results[0].Error() != nil {
-		appendTranscript(
-			state,
-			results[0].Error().Error(),
-		)
-		return
+		return results[0].Error().Error()
 	}
 
-	for _, result := range results {
-		appendCommand(
-			state,
-			result.Command(),
-			false,
-		)
+	var builder strings.Builder
+
+	for i, result := range results {
+		if i > 0 {
+			builder.WriteByte('\n')
+		}
+
+		builder.WriteString(state.shell.PromptString())
+		builder.WriteByte(' ')
+		builder.WriteString(result.Command())
 
 		if result.String() != "" {
-			appendTranscript(
-				state,
-				result.String(),
-			)
+			builder.WriteByte('\n')
+			builder.WriteString(result.String())
+		}
+	}
+
+	return builder.String()
+}
+
+func submitCommand(
+	state *terminalState,
+	command string,
+) bool {
+	wasRevMode := state.shell.RevMode
+
+	if !wasRevMode && strings.TrimSpace(command) != "" {
+		addToHistory(state, command)
+	}
+
+	result, shouldExit := state.shell.Execute(command)
+
+	if shouldExit {
+		state.window.Close()
+		return true
+	}
+
+	state.terminal.CommitCommand(
+		result,
+		currentPrompt(state.shell),
+	)
+
+	return false
+}
+
+func runPastedCommands(
+	state *terminalState,
+	text string,
+) {
+	text = state.terminal.CurrentCommand() + text
+
+	for _, command := range strings.Split(text, "\n") {
+		if strings.TrimSpace(command) == "" {
+			continue
+		}
+
+		state.terminal.SetCurrentCommand(command)
+
+		if submitCommand(state, command) {
+			return
 		}
 	}
 }
 
-func createPrompt(
-	state *terminalState,
-) *TerminalEntry {
-	prompt := newTerminalLabel(
+func handleCtrlD(state *terminalState) {
+	if !state.shell.RevMode {
+		return
+	}
+
+	state.shell.RevMode = false
+
+	state.terminal.ResetCurrentLine(
 		currentPrompt(state.shell),
 	)
-
-	input := NewTerminalEntry()
-	input.TextStyle = terminalTextStyle()
-
-	inputRow := container.NewBorder(
-		nil,
-		nil,
-		prompt,
-		nil,
-		input,
-	)
-
-	setupInputCallbacks(
-		state,
-		input,
-		inputRow,
-	)
-
-	state.content.Add(inputRow)
-
-	return input
 }
 
-func setupInputCallbacks(
-	state *terminalState,
-	input *TerminalEntry,
-	inputRow *fyne.Container,
-) {
-	setupHistoryCallbacks(state, input)
-
-	input.OnCtrlD = func() {
-		handleCtrlD(state, inputRow)
-	}
-
-	input.OnSubmitted = func(command string) {
-		runCommands(
-			state,
-			inputRow,
-			command,
-		)
-	}
-
-	input.OnPaste = func(text string) {
-		runCommands(
-			state,
-			inputRow,
-			input.Text+text,
-		)
-	}
-}
-
-func setupHistoryCallbacks(
-	state *terminalState,
-	input *TerminalEntry,
-) {
-	input.OnUp = func() {
-		historyUp(state, input)
-	}
-
-	input.OnDown = func() {
-		historyDown(state, input)
-	}
-}
-
-func historyUp(
-	state *terminalState,
-	input *TerminalEntry,
-) {
+func historyUp(state *terminalState) {
 	if len(state.history) == 0 {
 		return
 	}
@@ -257,17 +249,12 @@ func historyUp(
 		state.historyIndex--
 	}
 
-	input.SetText(
+	state.terminal.SetCurrentCommand(
 		state.history[state.historyIndex],
 	)
-
-	moveCursorToEnd(input)
 }
 
-func historyDown(
-	state *terminalState,
-	input *TerminalEntry,
-) {
+func historyDown(state *terminalState) {
 	if len(state.history) == 0 {
 		return
 	}
@@ -275,112 +262,15 @@ func historyDown(
 	if state.historyIndex < len(state.history)-1 {
 		state.historyIndex++
 
-		input.SetText(
+		state.terminal.SetCurrentCommand(
 			state.history[state.historyIndex],
 		)
-	} else {
-		state.historyIndex = len(state.history)
-		input.SetText("")
-	}
 
-	moveCursorToEnd(input)
-}
-
-func handleCtrlD(
-	state *terminalState,
-	inputRow *fyne.Container,
-) {
-	if !state.shell.RevMode {
 		return
 	}
 
-	state.shell.RevMode = false
-
-	state.content.Remove(inputRow)
-
-	focusNewPrompt(state)
-}
-
-func runCommands(
-	state *terminalState,
-	inputRow *fyne.Container,
-	text string,
-) {
-	state.content.Remove(inputRow)
-
-	for _, command := range strings.Split(text, "\n") {
-		if strings.TrimSpace(command) == "" {
-			continue
-		}
-
-		if runCommand(state, command) {
-			return
-		}
-	}
-
-	focusNewPrompt(state)
-}
-
-func runCommand(
-	state *terminalState,
-	command string,
-) bool {
-	wasRevMode := state.shell.RevMode
-
-	appendCommand(
-		state,
-		command,
-		wasRevMode,
-	)
-
-	if !wasRevMode {
-		addToHistory(state, command)
-	}
-
-	result, shouldExit := state.shell.Execute(command)
-
-	if result != "" {
-		appendTranscript(state, result)
-	}
-
-	if shouldExit {
-		state.window.Close()
-		return true
-	}
-
-	return false
-}
-
-func appendCommand(
-	state *terminalState,
-	command string,
-	revMode bool,
-) {
-	prompt := ""
-
-	if !revMode {
-		prompt = state.shell.PromptString() + " "
-	}
-
-	appendTranscript(
-		state,
-		prompt+command,
-	)
-}
-
-func appendTranscript(
-	state *terminalState,
-	text string,
-) {
-	if state.transcript != "" {
-		state.transcript += "\n"
-	}
-
-	state.transcript += text
-
-	state.output.SetText(
-		state.transcript,
-	)
+	state.historyIndex = len(state.history)
+	state.terminal.SetCurrentCommand("")
 }
 
 func addToHistory(
@@ -395,15 +285,6 @@ func addToHistory(
 	state.historyIndex = len(state.history)
 }
 
-func focusNewPrompt(
-	state *terminalState,
-) {
-	input := state.createPrompt()
-
-	state.window.Canvas().Focus(input)
-	state.scroll.ScrollToBottom()
-}
-
 func currentPrompt(
 	sh *shell.Shell,
 ) string {
@@ -414,29 +295,9 @@ func currentPrompt(
 	return sh.PromptString() + " "
 }
 
-func moveCursorToEnd(
-	input *TerminalEntry,
-) {
-	input.CursorColumn = len(
-		[]rune(input.Text),
-	)
-
-	input.Refresh()
-}
-
 func terminalTextStyle() fyne.TextStyle {
 	return fyne.TextStyle{
 		Monospace: true,
 		Bold:      true,
 	}
-}
-
-func newTerminalLabel(
-	text string,
-) *widget.Label {
-	label := widget.NewLabel(text)
-
-	label.TextStyle = terminalTextStyle()
-
-	return label
 }

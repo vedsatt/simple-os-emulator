@@ -14,12 +14,14 @@ import (
 type TerminalEntry struct {
 	widget.Entry
 
-	focused bool
+	focused      bool
+	commandStart int
 
-	OnCtrlD func()
-	OnUp    func()
-	OnDown  func()
-	OnPaste func(string)
+	OnSubmit func(string)
+	OnCtrlD  func()
+	OnUp     func()
+	OnDown   func()
+	OnPaste  func(string)
 }
 
 type terminalEntryRenderer struct {
@@ -31,24 +33,366 @@ type terminalEntryRenderer struct {
 func NewTerminalEntry() *TerminalEntry {
 	entry := &TerminalEntry{}
 
-	entry.Wrapping = fyne.TextWrap(
-		fyne.TextTruncateClip,
-	)
+	entry.MultiLine = true
+	entry.Wrapping = fyne.TextWrapOff
 
 	entry.ExtendBaseWidget(entry)
 
 	return entry
 }
 
+func (e *TerminalEntry) LoadTranscript(
+	transcript string,
+	prompt string,
+) {
+	text := transcript
+
+	if text != "" && prompt != "" {
+		text += "\n"
+	}
+
+	text += prompt
+
+	e.SetText(text)
+
+	e.commandStart = len(
+		[]rune(text),
+	)
+
+	e.moveCursorToEnd()
+}
+
+func (e *TerminalEntry) CurrentCommand() string {
+	runes := []rune(e.Text)
+
+	if e.commandStart >= len(runes) {
+		return ""
+	}
+
+	return string(
+		runes[e.commandStart:],
+	)
+}
+
+func (e *TerminalEntry) SetCurrentCommand(
+	command string,
+) {
+	runes := []rune(e.Text)
+
+	prefix := string(
+		runes[:e.commandStart],
+	)
+
+	e.SetText(prefix + command)
+	e.moveCursorToEnd()
+}
+
+func (e *TerminalEntry) CommitCommand(
+	output string,
+	prompt string,
+) {
+	text := e.Text
+
+	if output != "" {
+		text += "\n" + output
+	}
+
+	text += "\n" + prompt
+
+	e.SetText(text)
+
+	e.commandStart = len(
+		[]rune(text),
+	)
+
+	e.moveCursorToEnd()
+}
+
+func (e *TerminalEntry) ResetCurrentLine(
+	prompt string,
+) {
+	runes := []rune(e.Text)
+
+	text := string(
+		runes[:e.commandStart],
+	)
+
+	text += prompt
+
+	e.SetText(text)
+
+	e.commandStart = len(
+		[]rune(text),
+	)
+
+	e.moveCursorToEnd()
+}
+
 func (e *TerminalEntry) FocusGained() {
 	e.focused = true
+
 	e.Entry.FocusGained()
 	e.Refresh()
 }
 
 func (e *TerminalEntry) FocusLost() {
 	e.focused = false
+
 	e.Entry.FocusLost()
+	e.Refresh()
+}
+
+func (e *TerminalEntry) TypedRune(r rune) {
+	e.insertText(string(r))
+}
+
+func (e *TerminalEntry) TypedKey(
+	event *fyne.KeyEvent,
+) {
+	switch event.Name {
+	case fyne.KeyReturn:
+		if e.OnSubmit != nil {
+			e.OnSubmit(
+				e.CurrentCommand(),
+			)
+		}
+
+	case fyne.KeyBackspace:
+		e.backspace()
+
+	case fyne.KeyDelete:
+		e.deleteRune()
+
+	case fyne.KeyUp:
+		if e.OnUp != nil {
+			e.OnUp()
+		}
+
+	case fyne.KeyDown:
+		if e.OnDown != nil {
+			e.OnDown()
+		}
+
+	case fyne.KeyHome:
+		e.setCursorOffset(
+			e.commandStart,
+		)
+
+	case fyne.KeyEnd:
+		e.moveCursorToEnd()
+
+	default:
+		e.Entry.TypedKey(event)
+		e.protectHistoryCursor()
+	}
+}
+
+func (e *TerminalEntry) TypedShortcut(
+	shortcut fyne.Shortcut,
+) {
+	if e.handlePaste(shortcut) {
+		return
+	}
+
+	if e.handleCtrlD(shortcut) {
+		return
+	}
+
+	e.Entry.TypedShortcut(shortcut)
+}
+
+func (e *TerminalEntry) handlePaste(
+	shortcut fyne.Shortcut,
+) bool {
+	paste, ok := shortcut.(*fyne.ShortcutPaste)
+	if !ok {
+		return false
+	}
+
+	text := paste.Clipboard.Content()
+
+	if strings.Contains(text, "\n") {
+		if e.OnPaste != nil {
+			e.OnPaste(text)
+		}
+
+		return true
+	}
+
+	e.insertText(text)
+
+	return true
+}
+
+func (e *TerminalEntry) handleCtrlD(
+	shortcut fyne.Shortcut,
+) bool {
+	custom, ok := shortcut.(*desktop.CustomShortcut)
+	if !ok {
+		return false
+	}
+
+	if custom.KeyName != fyne.KeyD {
+		return false
+	}
+
+	if custom.Modifier != fyne.KeyModifierControl {
+		return false
+	}
+
+	if e.OnCtrlD != nil {
+		e.OnCtrlD()
+	}
+
+	return true
+}
+
+func (e *TerminalEntry) insertText(
+	text string,
+) {
+	runes := []rune(e.Text)
+
+	offset := e.CursorTextOffset()
+
+	if offset < e.commandStart {
+		offset = len(runes)
+	}
+
+	insert := []rune(text)
+
+	result := make(
+		[]rune,
+		0,
+		len(runes)+len(insert),
+	)
+
+	result = append(
+		result,
+		runes[:offset]...,
+	)
+
+	result = append(
+		result,
+		insert...,
+	)
+
+	result = append(
+		result,
+		runes[offset:]...,
+	)
+
+	e.SetText(
+		string(result),
+	)
+
+	e.setCursorOffset(
+		offset + len(insert),
+	)
+}
+
+func (e *TerminalEntry) backspace() {
+	runes := []rune(e.Text)
+
+	offset := e.CursorTextOffset()
+
+	if offset <= e.commandStart {
+		return
+	}
+
+	result := append(
+		[]rune{},
+		runes[:offset-1]...,
+	)
+
+	result = append(
+		result,
+		runes[offset:]...,
+	)
+
+	e.SetText(
+		string(result),
+	)
+
+	e.setCursorOffset(
+		offset - 1,
+	)
+}
+
+func (e *TerminalEntry) deleteRune() {
+	runes := []rune(e.Text)
+
+	offset := e.CursorTextOffset()
+
+	if offset < e.commandStart {
+		return
+	}
+
+	if offset >= len(runes) {
+		return
+	}
+
+	result := append(
+		[]rune{},
+		runes[:offset]...,
+	)
+
+	result = append(
+		result,
+		runes[offset+1:]...,
+	)
+
+	e.SetText(
+		string(result),
+	)
+
+	e.setCursorOffset(offset)
+}
+
+func (e *TerminalEntry) protectHistoryCursor() {
+	if e.CursorTextOffset() >= e.commandStart {
+		return
+	}
+
+	e.setCursorOffset(
+		e.commandStart,
+	)
+}
+
+func (e *TerminalEntry) moveCursorToEnd() {
+	e.setCursorOffset(
+		len([]rune(e.Text)),
+	)
+}
+
+func (e *TerminalEntry) setCursorOffset(
+	offset int,
+) {
+	runes := []rune(e.Text)
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	if offset > len(runes) {
+		offset = len(runes)
+	}
+
+	row := 0
+	column := 0
+
+	for _, r := range runes[:offset] {
+		if r == '\n' {
+			row++
+			column = 0
+			continue
+		}
+
+		column++
+	}
+
+	e.CursorRow = row
+	e.CursorColumn = column
+
 	e.Refresh()
 }
 
@@ -79,86 +423,6 @@ func newBlockCursor() *canvas.Rectangle {
 	)
 }
 
-func (e *TerminalEntry) TypedShortcut(
-	shortcut fyne.Shortcut,
-) {
-	if e.handlePaste(shortcut) {
-		return
-	}
-
-	if e.handleCtrlD(shortcut) {
-		return
-	}
-
-	e.Entry.TypedShortcut(shortcut)
-}
-
-func (e *TerminalEntry) handlePaste(
-	shortcut fyne.Shortcut,
-) bool {
-	paste, ok := shortcut.(*fyne.ShortcutPaste)
-	if !ok {
-		return false
-	}
-
-	text := paste.Clipboard.Content()
-
-	if !strings.Contains(text, "\n") {
-		return false
-	}
-
-	if e.OnPaste == nil {
-		return false
-	}
-
-	e.OnPaste(text)
-
-	return true
-}
-
-func (e *TerminalEntry) handleCtrlD(
-	shortcut fyne.Shortcut,
-) bool {
-	custom, ok := shortcut.(*desktop.CustomShortcut)
-	if !ok {
-		return false
-	}
-
-	if custom.KeyName != fyne.KeyD {
-		return false
-	}
-
-	if custom.Modifier != fyne.KeyModifierControl {
-		return false
-	}
-
-	if e.OnCtrlD != nil {
-		e.OnCtrlD()
-	}
-
-	return true
-}
-
-func (e *TerminalEntry) TypedKey(
-	event *fyne.KeyEvent,
-) {
-	switch event.Name {
-	case fyne.KeyUp:
-		if e.OnUp != nil {
-			e.OnUp()
-			return
-		}
-
-	case fyne.KeyDown:
-		if e.OnDown != nil {
-			e.OnDown()
-			return
-		}
-	}
-
-	e.Entry.TypedKey(event)
-}
-
 func (r *terminalEntryRenderer) Layout(
 	size fyne.Size,
 ) {
@@ -173,7 +437,10 @@ func (r *terminalEntryRenderer) MinSize() fyne.Size {
 func (r *terminalEntryRenderer) Refresh() {
 	r.base.Refresh()
 	r.updateCursor()
-	canvas.Refresh(r.blockCursor)
+
+	canvas.Refresh(
+		r.blockCursor,
+	)
 }
 
 func (r *terminalEntryRenderer) Objects() []fyne.CanvasObject {
@@ -185,8 +452,15 @@ func (r *terminalEntryRenderer) Objects() []fyne.CanvasObject {
 		len(baseObjects)+1,
 	)
 
-	objects = append(objects, baseObjects...)
-	objects = append(objects, r.blockCursor)
+	objects = append(
+		objects,
+		baseObjects...,
+	)
+
+	objects = append(
+		objects,
+		r.blockCursor,
+	)
 
 	return objects
 }
