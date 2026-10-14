@@ -1,6 +1,5 @@
-# stage3-simple.sh
 #!/bin/bash
 
 go run ./cmd \
-  -vfs simple \
+  -vfs deep \
   -script data/startup/stage3.txt

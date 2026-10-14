@@ -1,0 +1,7 @@
+ls
+ls /home/user
+
+cd
+cd /home/user
+
+unknown-command

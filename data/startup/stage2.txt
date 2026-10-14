@@ -1,12 +1,10 @@
-// configuration and startup script
-
-// basic commands
 ls
-cd
-
-// arguments parsing
 ls /home/user
+
+cd
 cd /home/user
 
-// error handling
-qwerty
+unknown-command
+
+pwd
+whoami
